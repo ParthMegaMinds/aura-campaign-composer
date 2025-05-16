@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { useData, ICP } from '@/contexts/DataContext';
@@ -36,7 +35,7 @@ const ContentGenerator = () => {
   const [icpId, setIcpId] = useState('');
   const [topic, setTopic] = useState('');
   const [length, setLength] = useState('medium');
-  const [tone, setTone] = useState('');
+  const [tone, setTone] = useState('default'); // Changed from empty string to 'default'
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState('');
@@ -281,6 +280,7 @@ const ContentGenerator = () => {
                     <SelectValue placeholder="Select tone" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="default">Default</SelectItem>
                     <SelectItem value="professional">Professional</SelectItem>
                     <SelectItem value="friendly">Friendly</SelectItem>
                     <SelectItem value="persuasive">Persuasive</SelectItem>

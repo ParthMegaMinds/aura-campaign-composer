@@ -31,7 +31,7 @@ const GraphicsGenerator = () => {
   const navigate = useNavigate();
   const { contents, addGraphic } = useData();
   
-  const [selectedContent, setSelectedContent] = useState<string>('');
+  const [selectedContent, setSelectedContent] = useState<string>('none'); // Changed from empty string to 'none'
   const [format, setFormat] = useState('LinkedIn');
   const [customMessage, setCustomMessage] = useState('');
   const [theme, setTheme] = useState('Tech Minimalist');
@@ -44,7 +44,7 @@ const GraphicsGenerator = () => {
     return contents.find(content => content.id === id);
   };
 
-  const content = selectedContent ? getContent(selectedContent) : undefined;
+  const content = selectedContent !== 'none' ? getContent(selectedContent) : undefined; // Updated condition
 
   // Sample placeholder images for demonstration
   const placeholderImages = [
@@ -55,7 +55,7 @@ const GraphicsGenerator = () => {
   ];
 
   const handleGenerateGraphics = () => {
-    if (!selectedContent && !customMessage) {
+    if (selectedContent === 'none' && !customMessage) { // Updated condition
       toast.error('Please select content or enter a custom message');
       return;
     }
@@ -89,7 +89,7 @@ const GraphicsGenerator = () => {
     addGraphic({
       title: graphicTitle,
       imageUrl: generatedImages[selectedImageIndex],
-      contentId: selectedContent || undefined,
+      contentId: selectedContent === 'none' ? undefined : selectedContent, // Updated condition
       format
     });
 
@@ -129,6 +129,7 @@ const GraphicsGenerator = () => {
                           <SelectValue placeholder="Select existing content" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
                           {contents.map((content) => (
                             <SelectItem key={content.id} value={content.id}>{content.title}</SelectItem>
                           ))}
@@ -199,7 +200,7 @@ const GraphicsGenerator = () => {
               <Button 
                 className="w-full mt-4" 
                 onClick={handleGenerateGraphics}
-                disabled={isGenerating || (!selectedContent && !customMessage)}
+                disabled={isGenerating || (selectedContent === 'none' && !customMessage)} // Updated condition
               >
                 {isGenerating ? (
                   <>

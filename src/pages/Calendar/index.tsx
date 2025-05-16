@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { useData, CalendarItem } from '@/contexts/DataContext';
@@ -59,8 +58,8 @@ const CalendarPlanner = () => {
   const [newItemDate, setNewItemDate] = useState<Date | undefined>(new Date());
   const [newItemPlatform, setNewItemPlatform] = useState('LinkedIn');
   const [newItemStatus, setNewItemStatus] = useState<'draft' | 'ready' | 'scheduled' | 'live'>('draft');
-  const [newItemContentId, setNewItemContentId] = useState('');
-  const [newItemGraphicId, setNewItemGraphicId] = useState('');
+  const [newItemContentId, setNewItemContentId] = useState<string>('none'); // Changed from empty string to 'none'
+  const [newItemGraphicId, setNewItemGraphicId] = useState<string>('none'); // Changed from empty string to 'none'
   
   const platforms = ['LinkedIn', 'Instagram', 'Twitter', 'Facebook', 'Email', 'Blog'];
   const statuses = ['draft', 'ready', 'scheduled', 'live'];
@@ -79,8 +78,8 @@ const CalendarPlanner = () => {
     addCalendarItem({
       title: newItemTitle,
       date: newItemDate.toISOString(),
-      contentId: newItemContentId || undefined,
-      graphicId: newItemGraphicId || undefined,
+      contentId: newItemContentId === 'none' ? undefined : newItemContentId, // Use undefined instead of empty string
+      graphicId: newItemGraphicId === 'none' ? undefined : newItemGraphicId, // Use undefined instead of empty string
       platform: newItemPlatform,
       status: newItemStatus
     });
@@ -90,8 +89,8 @@ const CalendarPlanner = () => {
     setNewItemDate(new Date());
     setNewItemPlatform('LinkedIn');
     setNewItemStatus('draft');
-    setNewItemContentId('');
-    setNewItemGraphicId('');
+    setNewItemContentId('none'); // Reset to 'none' instead of empty string
+    setNewItemGraphicId('none'); // Reset to 'none' instead of empty string
     setIsDialogOpen(false);
   };
 
@@ -226,7 +225,7 @@ const CalendarPlanner = () => {
                         <SelectValue placeholder="Select content" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {contents.map(content => (
                           <SelectItem key={content.id} value={content.id}>{content.title}</SelectItem>
                         ))}
@@ -241,7 +240,7 @@ const CalendarPlanner = () => {
                         <SelectValue placeholder="Select graphic" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {graphics.map(graphic => (
                           <SelectItem key={graphic.id} value={graphic.id}>{graphic.title}</SelectItem>
                         ))}
