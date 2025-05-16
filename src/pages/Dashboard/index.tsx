@@ -5,7 +5,9 @@ import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import MainLayout from '@/components/MainLayout';
-import { Plus, BarChart3, Clock, Calendar, Lightbulb } from 'lucide-react';
+import { Plus, BarChart3, Clock, Calendar, Lightbulb, ChartLineUp, FileBarChart, TrendingUp } from 'lucide-react';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Line, Bar, Pie, LineChart, BarChart, PieChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -23,6 +25,33 @@ const Dashboard = () => {
   
   // Get recent campaigns
   const recentCampaigns = campaigns.slice(0, 2);
+
+  // Content type distribution data for pie chart
+  const contentTypeData = [
+    { name: 'Social', value: contents.filter(c => c.type === 'social').length || 0 },
+    { name: 'Email', value: contents.filter(c => c.type === 'email').length || 0 },
+    { name: 'Blog', value: contents.filter(c => c.type === 'blog').length || 1 },
+    { name: 'Landing', value: contents.filter(c => c.type === 'landing').length || 0 },
+    { name: 'Proposal', value: contents.filter(c => c.type === 'proposal').length || 0 },
+  ];
+
+  // Mock data for content production over time
+  const contentCreationData = [
+    { name: 'Jan', content: 4, graphics: 2 },
+    { name: 'Feb', content: 6, graphics: 5 },
+    { name: 'Mar', content: 8, graphics: 7 },
+    { name: 'Apr', content: 10, graphics: 8 },
+    { name: 'May', content: contents.length, graphics: graphics.length },
+  ];
+
+  // Campaign status chart data
+  const campaignStatusData = [
+    { name: 'Active', value: campaigns.filter(c => new Date(c.endDate) > new Date()).length || 1 },
+    { name: 'Completed', value: campaigns.filter(c => new Date(c.endDate) <= new Date()).length || 0 },
+    { name: 'Draft', value: 1 },
+  ];
+
+  const COLORS = ['#8B5CF6', '#D946EF', '#F97316', '#0EA5E9', '#10B981'];
 
   return (
     <MainLayout>
@@ -95,6 +124,127 @@ const Dashboard = () => {
                   <Lightbulb className="h-5 w-5" />
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Content Production Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Content Production</CardTitle>
+              <CardDescription>Content and graphics created over time</CardDescription>
+            </CardHeader>
+            <CardContent className="h-80">
+              <ChartContainer 
+                config={{
+                  content: {
+                    color: '#8B5CF6'
+                  },
+                  graphics: {
+                    color: '#D946EF'
+                  }
+                }}
+              >
+                <LineChart data={contentCreationData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip content={(props) => (
+                    <ChartTooltipContent {...props} />
+                  )} />
+                  <Legend />
+                  <Line type="monotone" dataKey="content" stroke="#8B5CF6" strokeWidth={2} activeDot={{ r: 8 }} />
+                  <Line type="monotone" dataKey="graphics" stroke="#D946EF" strokeWidth={2} />
+                </LineChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          {/* Content Type Distribution */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Content Type Distribution</CardTitle>
+              <CardDescription>Breakdown of content by type</CardDescription>
+            </CardHeader>
+            <CardContent className="h-80 flex items-center justify-center">
+              <ChartContainer
+                config={{
+                  Social: {
+                    color: '#8B5CF6'
+                  },
+                  Email: {
+                    color: '#D946EF'
+                  },
+                  Blog: {
+                    color: '#F97316'
+                  },
+                  Landing: {
+                    color: '#0EA5E9'
+                  },
+                  Proposal: {
+                    color: '#10B981'
+                  }
+                }}
+              >
+                <PieChart>
+                  <Pie
+                    data={contentTypeData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {contentTypeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={(props) => (
+                    <ChartTooltipContent {...props} />
+                  )} />
+                </PieChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          {/* Campaign Status Chart */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Campaign Status</CardTitle>
+              <CardDescription>Overview of campaign statuses</CardDescription>
+            </CardHeader>
+            <CardContent className="h-64">
+              <ChartContainer
+                config={{
+                  Active: {
+                    color: '#8B5CF6'
+                  },
+                  Completed: {
+                    color: '#10B981'
+                  },
+                  Draft: {
+                    color: '#F97316'
+                  }
+                }}
+              >
+                <BarChart data={campaignStatusData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip content={(props) => (
+                    <ChartTooltipContent {...props} />
+                  )} />
+                  <Bar dataKey="value" fill="#8B5CF6">
+                    {campaignStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ChartContainer>
             </CardContent>
           </Card>
         </div>
