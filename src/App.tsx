@@ -1,26 +1,66 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { DataProvider } from "@/contexts/DataContext";
+
+// Auth Routes
+import Login from "./pages/Auth/Login";
+import Signup from "./pages/Auth/Signup";
+import Onboarding from "./pages/Auth/Onboarding";
+
+// Main Routes
+import Dashboard from "./pages/Dashboard";
+import ICPBuilder from "./pages/ICPBuilder";
+import ContentGenerator from "./pages/ContentGenerator";
+import GraphicsGenerator from "./pages/GraphicsGenerator";
+import CalendarPlanner from "./pages/Calendar";
+import ContentLibrary from "./pages/ContentLibrary";
+import CampaignsPage from "./pages/Campaign/CampaignsPage";
+import CreateCampaign from "./pages/Campaign/CreateCampaign";
+import CampaignDetail from "./pages/Campaign/CampaignDetail";
 import NotFound from "./pages/NotFound";
+
+// Components
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <DataProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Auth Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              
+              {/* Protected Routes */}
+              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/icp-builder" element={<ProtectedRoute><ICPBuilder /></ProtectedRoute>} />
+              <Route path="/content-generator" element={<ProtectedRoute><ContentGenerator /></ProtectedRoute>} />
+              <Route path="/graphics-generator" element={<ProtectedRoute><GraphicsGenerator /></ProtectedRoute>} />
+              <Route path="/calendar" element={<ProtectedRoute><CalendarPlanner /></ProtectedRoute>} />
+              <Route path="/content-library" element={<ProtectedRoute><ContentLibrary /></ProtectedRoute>} />
+              <Route path="/campaigns" element={<ProtectedRoute><CampaignsPage /></ProtectedRoute>} />
+              <Route path="/create-campaign" element={<ProtectedRoute><CreateCampaign /></ProtectedRoute>} />
+              <Route path="/campaign/:id" element={<ProtectedRoute><CampaignDetail /></ProtectedRoute>} />
+              
+              {/* Catch All Route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </DataProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
