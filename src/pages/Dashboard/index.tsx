@@ -1,15 +1,14 @@
 
 import React from 'react';
 import MainLayout from '@/components/MainLayout';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useData } from '@/contexts/DataContext';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-         PieChart, Pie, Legend, Cell as RechartsCell, BarChart, Bar } from 'recharts';
+         PieChart, Pie, Legend, Cell, BarChart, Bar } from 'recharts';
 import { ChartLine, PieChart as PieChartIcon, BarChart3 } from 'lucide-react';
 
 const Dashboard = () => {
-  const { campaigns, posts, calendarItems } = useData();
+  const { campaigns, contents, calendarItems } = useData();
   
   // Sample data for charts - in a real app, this would be derived from actual data
   const contentOverTimeData = [
@@ -69,7 +68,7 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{posts.length}</div>
+              <div className="text-2xl font-bold">{contents.length}</div>
               <p className="text-xs text-muted-foreground">+{Math.floor(Math.random() * 20)}% from last month</p>
             </CardContent>
           </Card>
@@ -129,7 +128,7 @@ const Dashboard = () => {
                     dataKey="value"
                   >
                     {contentTypeData.map((entry, index) => (
-                      <RechartsCell key={`cell-${index}`} fill={CONTENT_TYPE_COLORS[index % CONTENT_TYPE_COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={CONTENT_TYPE_COLORS[index % CONTENT_TYPE_COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip formatter={(value) => [`${value}`, 'Count']} />
@@ -154,7 +153,7 @@ const Dashboard = () => {
                 <Tooltip formatter={(value) => [`${value}`, 'Count']} />
                 <Bar dataKey="count" fill="#8884d8">
                   {campaignStatusData.map((entry, index) => (
-                    <RechartsCell key={`cell-${index}`} fill={CONTENT_TYPE_COLORS[index % CONTENT_TYPE_COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={CONTENT_TYPE_COLORS[index % CONTENT_TYPE_COLORS.length]} />
                   ))}
                 </Bar>
               </BarChart>
