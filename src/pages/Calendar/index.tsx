@@ -331,11 +331,16 @@ const CalendarPlanner = () => {
                 onSelect={setSelectedDate}
                 onMonthChange={setDate}
                 className="rounded-md border pointer-events-auto"
+                modifiersClassNames={{
+                  selected: "bg-primary text-primary-foreground",
+                  today: "bg-accent text-accent-foreground",
+                }}
+                modifiers={{
+                  hasItems: (day) => dateHasCalendarItems(day)
+                }}
                 classNames={{
-                  day: (day) => 
-                    cn("", { 
-                      'bg-primary/10 font-bold': dateHasCalendarItems(day) 
-                    })
+                  day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+                  day_hasItems: "bg-primary/10 font-bold"
                 }}
               />
             </div>
