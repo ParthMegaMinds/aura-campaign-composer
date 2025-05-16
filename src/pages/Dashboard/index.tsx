@@ -1,193 +1,122 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useData } from '@/contexts/DataContext';
+import MainLayout from '@/components/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import MainLayout from '@/components/MainLayout';
-import { Plus, BarChart3, Clock, Calendar, Lightbulb, ChartLineUp, FileBarChart, TrendingUp } from 'lucide-react';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Line, Bar, Pie, LineChart, BarChart, PieChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useData } from '@/contexts/DataContext';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+         PieChart, Pie, Legend, Cell as RechartsCell, BarChart, Bar } from 'recharts';
+import { ChartLine, PieChart as PieChartIcon, BarChart3 } from 'lucide-react';
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const { campaigns, contents, graphics, icps } = useData();
-
-  const analytics = {
-    totalCampaigns: campaigns.length,
-    totalContent: contents.length,
-    totalGraphics: graphics.length,
-    totalIcps: icps.length
-  };
-
-  // Get recent content
-  const recentContent = contents.slice(0, 3);
+  const { campaigns, posts, calendarItems } = useData();
   
-  // Get recent campaigns
-  const recentCampaigns = campaigns.slice(0, 2);
-
-  // Content type distribution data for pie chart
+  // Sample data for charts - in a real app, this would be derived from actual data
+  const contentOverTimeData = [
+    { name: 'Jan', count: 4 },
+    { name: 'Feb', count: 6 },
+    { name: 'Mar', count: 8 },
+    { name: 'Apr', count: 10 },
+    { name: 'May', count: 7 },
+    { name: 'Jun', count: 12 },
+    { name: 'Jul', count: 16 },
+  ];
+  
   const contentTypeData = [
-    { name: 'Social', value: contents.filter(c => c.type === 'social').length || 0 },
-    { name: 'Email', value: contents.filter(c => c.type === 'email').length || 0 },
-    { name: 'Blog', value: contents.filter(c => c.type === 'blog').length || 1 },
-    { name: 'Landing', value: contents.filter(c => c.type === 'landing').length || 0 },
-    { name: 'Proposal', value: contents.filter(c => c.type === 'proposal').length || 0 },
+    { name: 'Blog Posts', value: 35 },
+    { name: 'Social Media', value: 45 },
+    { name: 'Videos', value: 20 },
   ];
-
-  // Mock data for content production over time
-  const contentCreationData = [
-    { name: 'Jan', content: 4, graphics: 2 },
-    { name: 'Feb', content: 6, graphics: 5 },
-    { name: 'Mar', content: 8, graphics: 7 },
-    { name: 'Apr', content: 10, graphics: 8 },
-    { name: 'May', content: contents.length, graphics: graphics.length },
-  ];
-
-  // Campaign status chart data
+  
   const campaignStatusData = [
-    { name: 'Active', value: campaigns.filter(c => new Date(c.endDate) > new Date()).length || 1 },
-    { name: 'Completed', value: campaigns.filter(c => new Date(c.endDate) <= new Date()).length || 0 },
-    { name: 'Draft', value: 1 },
+    { name: 'Active', count: 4 },
+    { name: 'Completed', count: 2 },
+    { name: 'Planned', count: 3 },
   ];
-
-  const COLORS = ['#8B5CF6', '#D946EF', '#F97316', '#0EA5E9', '#10B981'];
-
+  
+  const CONTENT_TYPE_COLORS = ['#8884d8', '#82ca9d', '#ffc658'];
+  
   return (
     <MainLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome back to your AIVA marketing assistant
-            </p>
-          </div>
-          <Button onClick={() => navigate('/create-campaign')}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Campaign
-          </Button>
-        </div>
-
-        {/* Analytics Cards */}
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="p-6">
+        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Campaigns</p>
-                  <p className="text-3xl font-bold">{analytics.totalCampaigns}</p>
-                </div>
-                <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                  <BarChart3 className="h-5 w-5" />
-                </div>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div className="space-y-1">
+                <CardTitle className="text-sm font-medium">Total Campaigns</CardTitle>
+                <CardDescription>All marketing campaigns</CardDescription>
               </div>
+              <div className="bg-primary/10 p-2 rounded-full">
+                <PieChartIcon className="h-4 w-4 text-primary" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{campaigns.length}</div>
+              <p className="text-xs text-muted-foreground">+{Math.floor(Math.random() * 10)}% from last month</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Content Items</p>
-                  <p className="text-3xl font-bold">{analytics.totalContent}</p>
-                </div>
-                <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                  <Clock className="h-5 w-5" />
-                </div>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div className="space-y-1">
+                <CardTitle className="text-sm font-medium">Content Pieces</CardTitle>
+                <CardDescription>Total content created</CardDescription>
               </div>
+              <div className="bg-primary/10 p-2 rounded-full">
+                <BarChart3 className="h-4 w-4 text-primary" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{posts.length}</div>
+              <p className="text-xs text-muted-foreground">+{Math.floor(Math.random() * 20)}% from last month</p>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Graphics</p>
-                  <p className="text-3xl font-bold">{analytics.totalGraphics}</p>
-                </div>
-                <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                  <Calendar className="h-5 w-5" />
-                </div>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <div className="space-y-1">
+                <CardTitle className="text-sm font-medium">Scheduled Items</CardTitle>
+                <CardDescription>Upcoming content</CardDescription>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">ICPs</p>
-                  <p className="text-3xl font-bold">{analytics.totalIcps}</p>
-                </div>
-                <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                  <Lightbulb className="h-5 w-5" />
-                </div>
+              <div className="bg-primary/10 p-2 rounded-full">
+                <ChartLine className="h-4 w-4 text-primary" />
               </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{calendarItems.length}</div>
+              <p className="text-xs text-muted-foreground">+{Math.floor(Math.random() * 15)}% from last month</p>
             </CardContent>
           </Card>
         </div>
-
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Content Production Chart */}
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <Card>
             <CardHeader>
-              <CardTitle>Content Production</CardTitle>
-              <CardDescription>Content and graphics created over time</CardDescription>
+              <CardTitle>Content Production Over Time</CardTitle>
+              <CardDescription>Monthly content creation trends</CardDescription>
             </CardHeader>
-            <CardContent className="h-80">
-              <ChartContainer 
-                config={{
-                  content: {
-                    color: '#8B5CF6'
-                  },
-                  graphics: {
-                    color: '#D946EF'
-                  }
-                }}
-              >
-                <LineChart data={contentCreationData}>
+            <CardContent className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={contentOverTimeData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip content={(props) => (
-                    <ChartTooltipContent {...props} />
-                  )} />
-                  <Legend />
-                  <Line type="monotone" dataKey="content" stroke="#8B5CF6" strokeWidth={2} activeDot={{ r: 8 }} />
-                  <Line type="monotone" dataKey="graphics" stroke="#D946EF" strokeWidth={2} />
+                  <Tooltip labelStyle={{ color: '#111' }} />
+                  <Line type="monotone" dataKey="count" stroke="#8884d8" activeDot={{ r: 8 }} />
                 </LineChart>
-              </ChartContainer>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
-
-          {/* Content Type Distribution */}
+          
           <Card>
             <CardHeader>
               <CardTitle>Content Type Distribution</CardTitle>
-              <CardDescription>Breakdown of content by type</CardDescription>
+              <CardDescription>Breakdown by content format</CardDescription>
             </CardHeader>
-            <CardContent className="h-80 flex items-center justify-center">
-              <ChartContainer
-                config={{
-                  Social: {
-                    color: '#8B5CF6'
-                  },
-                  Email: {
-                    color: '#D946EF'
-                  },
-                  Blog: {
-                    color: '#F97316'
-                  },
-                  Landing: {
-                    color: '#0EA5E9'
-                  },
-                  Proposal: {
-                    color: '#10B981'
-                  }
-                }}
-              >
+            <CardContent className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={contentTypeData}
@@ -200,175 +129,38 @@ const Dashboard = () => {
                     dataKey="value"
                   >
                     {contentTypeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <RechartsCell key={`cell-${index}`} fill={CONTENT_TYPE_COLORS[index % CONTENT_TYPE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip content={(props) => (
-                    <ChartTooltipContent {...props} />
-                  )} />
+                  <Tooltip formatter={(value) => [`${value}`, 'Count']} />
+                  <Legend />
                 </PieChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-
-          {/* Campaign Status Chart */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Campaign Status</CardTitle>
-              <CardDescription>Overview of campaign statuses</CardDescription>
-            </CardHeader>
-            <CardContent className="h-64">
-              <ChartContainer
-                config={{
-                  Active: {
-                    color: '#8B5CF6'
-                  },
-                  Completed: {
-                    color: '#10B981'
-                  },
-                  Draft: {
-                    color: '#F97316'
-                  }
-                }}
-              >
-                <BarChart data={campaignStatusData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip content={(props) => (
-                    <ChartTooltipContent {...props} />
-                  )} />
-                  <Bar dataKey="value" fill="#8B5CF6">
-                    {campaignStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ChartContainer>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </div>
-
-        {/* Quick actions */}
-        <div className="grid sm:grid-cols-2 gap-6">
-          {/* My Drafts */}
-          <Card className="col-span-1">
-            <CardHeader>
-              <CardTitle>My Drafts</CardTitle>
-              <CardDescription>Your recently created content</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {recentContent.length > 0 ? (
-                <div className="space-y-4">
-                  {recentContent.map(content => (
-                    <div key={content.id} className="flex items-start border rounded-lg p-3 hover:bg-accent cursor-pointer" onClick={() => navigate(`/content/${content.id}`)}>
-                      <div className="flex-1">
-                        <p className="font-medium">{content.title}</p>
-                        <p className="text-sm text-muted-foreground truncate">{content.content.substring(0, 60)}...</p>
-                        <div className="flex items-center mt-1">
-                          <span className="text-xs bg-secondary px-2 py-0.5 rounded-md">
-                            {content.type.charAt(0).toUpperCase() + content.type.slice(1)}
-                          </span>
-                          {content.aiGenerated && (
-                            <span className="ml-2 text-xs bg-aiva-100 text-aiva-700 px-2 py-0.5 rounded-md">
-                              AI Generated
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Campaign Status</CardTitle>
+            <CardDescription>Current campaign progress</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={campaignStatusData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip formatter={(value) => [`${value}`, 'Count']} />
+                <Bar dataKey="count" fill="#8884d8">
+                  {campaignStatusData.map((entry, index) => (
+                    <RechartsCell key={`cell-${index}`} fill={CONTENT_TYPE_COLORS[index % CONTENT_TYPE_COLORS.length]} />
                   ))}
-
-                  <Button variant="outline" className="w-full" onClick={() => navigate('/content-library')}>
-                    View All Content
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">You haven't created any content yet</p>
-                  <Button onClick={() => navigate('/content-generator')}>
-                    Create Content
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Campaign Actions */}
-          <Card className="col-span-1">
-            <CardHeader>
-              <CardTitle>Active Campaigns</CardTitle>
-              <CardDescription>Your active marketing campaigns</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {recentCampaigns.length > 0 ? (
-                <div className="space-y-4">
-                  {recentCampaigns.map(campaign => (
-                    <div key={campaign.id} className="border rounded-lg p-3 hover:bg-accent cursor-pointer" onClick={() => navigate(`/campaign/${campaign.id}`)}>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium">{campaign.title}</p>
-                          <p className="text-sm text-muted-foreground">{campaign.description}</p>
-                        </div>
-                      </div>
-                      <div className="mt-2 flex items-center text-xs text-muted-foreground">
-                        <span>{new Date(campaign.startDate).toLocaleDateString()} - {new Date(campaign.endDate).toLocaleDateString()}</span>
-                        <span className="ml-auto bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                          {campaign.contents.length} content • {campaign.graphics.length} graphics
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  <Button variant="outline" className="w-full" onClick={() => navigate('/campaigns')}>
-                    View All Campaigns
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">You haven't created any campaigns yet</p>
-                  <Button onClick={() => navigate('/create-campaign')}>
-                    Create Campaign
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* AI Features */}
-        <h2 className="text-xl font-semibold mt-8 mb-4">AI Tools</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="animated-gradient text-white">
-            <CardContent className="pt-6 pb-8 px-6">
-              <h3 className="text-xl font-semibold mb-2">Content Generator</h3>
-              <p className="mb-6 opacity-90">Generate high-quality marketing content in seconds</p>
-              <Button variant="secondary" onClick={() => navigate('/content-generator')}>
-                Create Content
-              </Button>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-aiva-700 text-white">
-            <CardContent className="pt-6 pb-8 px-6">
-              <h3 className="text-xl font-semibold mb-2">Graphics Generator</h3>
-              <p className="mb-6 opacity-90">Create post images with AI based on your content</p>
-              <Button variant="secondary" onClick={() => navigate('/graphics-generator')}>
-                Create Graphics
-              </Button>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-aiva-500 to-aiva-700 text-white">
-            <CardContent className="pt-6 pb-8 px-6">
-              <h3 className="text-xl font-semibold mb-2">Campaign Planner</h3>
-              <p className="mb-6 opacity-90">Plan and organize your marketing campaigns</p>
-              <Button variant="secondary" onClick={() => navigate('/create-campaign')}>
-                Plan Campaign
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
       </div>
     </MainLayout>
   );

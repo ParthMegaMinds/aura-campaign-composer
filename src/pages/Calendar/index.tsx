@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
-import { Calendar } from 'react-day-picker';
+import { DayPicker } from 'react-day-picker';
 import { cn } from "@/lib/utils";
 import { addDays, format } from 'date-fns';
 import { useData } from '@/contexts/DataContext';
 import MainLayout from '@/components/MainLayout';
+import { Calendar } from "@/components/ui/calendar";
 
 const CalendarPlanner = () => {
   const [selected, setSelected] = useState<Date | undefined>(new Date());
@@ -41,14 +43,6 @@ const CalendarPlanner = () => {
             selected={selected}
             onSelect={setSelected}
             className={cn("border-none p-0 relative")}
-            styles={{
-              head_cell: {
-                color: '#988eff'
-              }
-            }}
-            classNames={{
-              day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
-            }}
             modifiers={{
               hasItems: (day) => dateHasCalendarItems(day),
               today: new Date()
