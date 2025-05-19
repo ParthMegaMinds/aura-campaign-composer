@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WordPressService, WordPressPost } from '@/services/WordPressService';
 import { toast } from "@/components/ui/sonner";
-import { Wordpress, Settings, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { FileType, Settings, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
@@ -57,7 +56,7 @@ export const WordPressBlogManager = () => {
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Wordpress className="mr-2 h-5 w-5" />
+          <FileType className="mr-2 h-5 w-5" />
           WordPress Blog Manager
         </CardTitle>
         <CardDescription>
