@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { toast } from "@/components/ui/sonner";
 
@@ -32,6 +33,8 @@ export type GraphicItem = {
   createdAt: string;
 };
 
+export type SocialMediaPlatform = 'LinkedIn' | 'Twitter' | 'Facebook' | 'Instagram' | 'Pinterest' | 'TikTok';
+
 export type CalendarItem = {
   id: string;
   title: string;
@@ -41,6 +44,14 @@ export type CalendarItem = {
   platform: string;
   status: 'draft' | 'ready' | 'scheduled' | 'live';
   assignee?: string;
+  socialMediaDetails?: {
+    platform: SocialMediaPlatform;
+    time: string; // HH:MM format
+    caption?: string;
+    hashtags?: string[];
+    scheduledStatus?: 'pending' | 'posted' | 'failed';
+    postUrl?: string;
+  };
 };
 
 export type Campaign = {
@@ -82,6 +93,8 @@ type DataContextType = {
   getGraphicById: (id: string) => GraphicItem | undefined;
   getCalendarItemById: (id: string) => CalendarItem | undefined;
   getCampaignById: (id: string) => Campaign | undefined;
+  scheduleSocialMediaPost: (postDetails: Omit<CalendarItem, 'id'>) => string;
+  getSocialMediaPosts: (platform?: SocialMediaPlatform) => CalendarItem[];
 };
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -162,7 +175,7 @@ export const DataProvider = ({ children }: DataProviderProps) => {
       setGraphics([sampleGraphic]);
       localStorage.setItem('aiva_graphics', JSON.stringify([sampleGraphic]));
 
-      // Add sample calendar item
+      // Add sample calendar item with social media details
       const nextWeek = new Date();
       nextWeek.setDate(nextWeek.getDate() + 7);
       
@@ -173,7 +186,14 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         contentId: "content-1",
         graphicId: "graphic-1",
         platform: "LinkedIn",
-        status: "ready" as const
+        status: "ready" as const,
+        socialMediaDetails: {
+          platform: "LinkedIn" as SocialMediaPlatform,
+          time: "09:30",
+          caption: "Excited to share our latest insights on AI benefits for SaaS companies! #AI #SaaS #Innovation",
+          hashtags: ["AI", "SaaS", "Innovation"],
+          scheduledStatus: "pending" as const
+        }
       };
 
       setCalendarItems([sampleCalendarItem]);
@@ -293,6 +313,21 @@ export const DataProvider = ({ children }: DataProviderProps) => {
     toast.success("Calendar item deleted successfully");
   };
 
+  // New function for social media post scheduling
+  const scheduleSocialMediaPost = (postDetails: Omit<CalendarItem, 'id'>) => {
+    const id = addCalendarItem(postDetails);
+    toast.success("Social media post scheduled successfully");
+    return id;
+  };
+
+  // Get social media posts (filter by platform if provided)
+  const getSocialMediaPosts = (platform?: SocialMediaPlatform) => {
+    return calendarItems.filter(item => 
+      item.socialMediaDetails && 
+      (!platform || item.socialMediaDetails.platform === platform)
+    );
+  };
+
   // Campaign operations
   const addCampaign = (campaign: Omit<Campaign, 'id' | 'createdAt'>) => {
     const id = `campaign-${Date.now()}`;
@@ -345,7 +380,9 @@ export const DataProvider = ({ children }: DataProviderProps) => {
       getContentById,
       getGraphicById,
       getCalendarItemById,
-      getCampaignById
+      getCampaignById,
+      scheduleSocialMediaPost,
+      getSocialMediaPosts
     }}>
       {children}
     </DataContext.Provider>

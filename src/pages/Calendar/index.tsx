@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { format, addDays, isBefore, isAfter, subDays } from 'date-fns';
 import { useData } from '@/contexts/DataContext';
@@ -16,6 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WordPressService, WordPressPost } from '@/services/WordPressService';
 import { toast } from "@/components/ui/sonner";
 import { WordPressBlogManager } from '@/components/WordPress/BlogManager';
+import SocialMediaScheduler from '@/components/Calendar/SocialMediaScheduler';
+import SocialMediaCalendar from '@/components/Calendar/SocialMediaCalendar';
 
 const CalendarPlanner = () => {
   const [selected, setSelected] = useState<Date | undefined>(new Date());
@@ -23,6 +26,7 @@ const CalendarPlanner = () => {
   const [upcomingPosts, setUpcomingPosts] = useState([]);
   const [recentPosts, setRecentPosts] = useState([]);
   const { calendarItems, getContentById } = useData();
+  const [activeTab, setActiveTab] = useState("local");
   
   // WordPress integration
   const [wpSiteUrl, setWpSiteUrl] = useState(WordPressService.getSiteUrl() || '');
@@ -120,6 +124,12 @@ const CalendarPlanner = () => {
   const formatCalendarDate = (dateString) => {
     const date = new Date(dateString);
     return format(date, 'MMM d, yyyy');
+  };
+  
+  const handleRefreshCalendar = () => {
+    // Force refresh of all calendar data
+    const today = new Date();
+    setSelected(new Date(today));
   };
 
   return (
@@ -239,10 +249,11 @@ const CalendarPlanner = () => {
               </CardContent>
             </Card>
             
-            {/* Content Tabs (Local & WordPress) */}
-            <Tabs defaultValue="local" className="mb-6">
-              <TabsList className="grid w-full grid-cols-3">
+            {/* Content Tabs (Local, Social, WordPress) */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="local">Local Content</TabsTrigger>
+                <TabsTrigger value="social">Social Media</TabsTrigger>
                 <TabsTrigger value="wordpress" disabled={!wpEnabled}>WordPress Blog</TabsTrigger>
                 <TabsTrigger value="wp-manager" disabled={!wpEnabled}>Blog Manager</TabsTrigger>
               </TabsList>
@@ -326,6 +337,14 @@ const CalendarPlanner = () => {
                     </ScrollArea>
                   </CardContent>
                 </Card>
+              </TabsContent>
+              
+              {/* Social Media Tab */}
+              <TabsContent value="social" className="space-y-6">
+                <div className="grid grid-cols-1 gap-6">
+                  <SocialMediaScheduler onScheduleSuccess={handleRefreshCalendar} />
+                  <SocialMediaCalendar onRefresh={handleRefreshCalendar} />
+                </div>
               </TabsContent>
               
               {/* WordPress Content Tab */}
