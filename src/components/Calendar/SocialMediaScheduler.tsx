@@ -252,7 +252,7 @@ export const SocialMediaScheduler = ({ onScheduleSuccess }: SocialMediaScheduler
                 <SelectValue placeholder="Select existing content" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 {socialMediaContents.map(content => (
                   <SelectItem key={content.id} value={content.id}>{content.title}</SelectItem>
                 ))}
@@ -268,7 +268,7 @@ export const SocialMediaScheduler = ({ onScheduleSuccess }: SocialMediaScheduler
                 <SelectValue placeholder="Select graphic" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 {graphics.map(graphic => (
                   <SelectItem key={graphic.id} value={graphic.id}>{graphic.title}</SelectItem>
                 ))}
