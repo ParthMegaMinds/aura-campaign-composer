@@ -1,7 +1,6 @@
-
 import { toast } from "@/components/ui/sonner";
 
-export type AIProvider = 'chatgpt' | 'perplexity' | 'mock';
+export type AIProvider = 'chatgpt' | 'perplexity' | 'mock' | 'sora';
 
 export type AIGenerationParams = {
   prompt: string;
@@ -9,6 +8,14 @@ export type AIGenerationParams = {
   temperature?: number;
   provider: AIProvider;
   apiKey?: string; // For temporary client-side usage
+};
+
+export type ImageGenerationParams = {
+  prompt: string;
+  provider: 'sora';
+  apiKey?: string;
+  style?: string;
+  resolution?: string;
 };
 
 export const AIService = {
@@ -21,6 +28,7 @@ export const AIService = {
         case 'perplexity':
           return await this.generateWithPerplexity(params);
         case 'mock':
+        case 'sora':
         default:
           return this.generateMockContent(params.prompt);
       }
@@ -152,5 +160,39 @@ In conclusion, ${prompt} represents an important opportunity for businesses that
     
     // Return blog template if prompt contains blog, otherwise return default template
     return prompt.toLowerCase().includes('blog') ? templates.blog : templates.default;
+  },
+
+  // Generate images using Sora AI
+  async generateImages(params: ImageGenerationParams): Promise<string[]> {
+    if (params.provider !== 'sora') {
+      throw new Error('Only Sora AI image generation is supported at this time');
+    }
+
+    // In a real implementation, this would call the Sora API
+    // For now, we'll create a mock implementation that returns placeholder images
+    try {
+      if (!params.apiKey && params.provider === 'sora') {
+        toast.error("Sora API key is required");
+        return [];
+      }
+
+      // For demo purposes, we'll simulate an API call with a timeout
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Return mock image URLs based on the prompt
+      const mockImageUrls = [
+        'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
+        'https://images.unsplash.com/photo-1649972904349-6e44c42644a7',
+        'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b',
+        'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7'
+      ];
+
+      toast.success("AI images generated successfully!");
+      return mockImageUrls;
+    } catch (error) {
+      console.error("Error generating images with Sora:", error);
+      toast.error("Failed to generate images with Sora AI");
+      return [];
+    }
   }
 };

@@ -23,15 +23,16 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Download, Wand2, Save } from 'lucide-react';
+import { Clock, Download, Wand2, Save, Image } from 'lucide-react';
 import { toast } from "@/components/ui/sonner";
 import { useNavigate } from 'react-router-dom';
+import { AIService } from '@/services/AIService';
 
 const GraphicsGenerator = () => {
   const navigate = useNavigate();
   const { contents, addGraphic } = useData();
   
-  const [selectedContent, setSelectedContent] = useState<string>('none'); // Changed from empty string to 'none'
+  const [selectedContent, setSelectedContent] = useState<string>('none');
   const [format, setFormat] = useState('LinkedIn');
   const [customMessage, setCustomMessage] = useState('');
   const [theme, setTheme] = useState('Tech Minimalist');
@@ -39,33 +40,45 @@ const GraphicsGenerator = () => {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [graphicTitle, setGraphicTitle] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
 
   const getContent = (id: string): ContentItem | undefined => {
     return contents.find(content => content.id === id);
   };
 
-  const content = selectedContent !== 'none' ? getContent(selectedContent) : undefined; // Updated condition
+  const content = selectedContent !== 'none' ? getContent(selectedContent) : undefined;
 
-  // Sample placeholder images for demonstration
-  const placeholderImages = [
-    'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158',
-    'https://images.unsplash.com/photo-1649972904349-6e44c42644a7',
-    'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b',
-    'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7'
-  ];
-
-  const handleGenerateGraphics = () => {
-    if (selectedContent === 'none' && !customMessage) { // Updated condition
+  const handleGenerateGraphics = async () => {
+    if (selectedContent === 'none' && !customMessage) {
       toast.error('Please select content or enter a custom message');
       return;
     }
 
-    setIsGenerating(true);
+    if (!apiKey && showApiKeyInput) {
+      toast.error('Please enter your Sora API key');
+      return;
+    }
 
-    // Simulate AI generation with a timeout
-    setTimeout(() => {
-      setGeneratedImages(placeholderImages);
-      setIsGenerating(false);
+    setIsGenerating(true);
+    setGeneratedImages([]);
+
+    try {
+      // Prepare the prompt based on selected content or custom message
+      const promptText = content 
+        ? `Create a ${format} graphic for: ${content.title}. Style: ${theme}. Content summary: ${content.content.substring(0, 200)}`
+        : `Create a ${format} graphic with ${theme} style for: ${customMessage}`;
+        
+      // Call Sora AI service to generate images
+      const images = await AIService.generateImages({
+        prompt: promptText,
+        provider: 'sora',
+        apiKey: apiKey,
+        style: theme,
+        resolution: format === 'Instagram' ? '1080x1080' : '1200x630'
+      });
+      
+      setGeneratedImages(images);
       
       // Set default title
       if (content) {
@@ -73,7 +86,11 @@ const GraphicsGenerator = () => {
       } else {
         setGraphicTitle(`${format} Graphic - ${new Date().toLocaleDateString()}`);
       }
-    }, 2000);
+    } catch (error) {
+      console.error("Error generating graphics:", error);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleSelectImage = (index: number) => {
@@ -89,7 +106,7 @@ const GraphicsGenerator = () => {
     addGraphic({
       title: graphicTitle,
       imageUrl: generatedImages[selectedImageIndex],
-      contentId: selectedContent === 'none' ? undefined : selectedContent, // Updated condition
+      contentId: selectedContent === 'none' ? undefined : selectedContent,
       format
     });
 
@@ -103,7 +120,7 @@ const GraphicsGenerator = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Graphics Generator</h1>
           <p className="text-muted-foreground">
-            Create AI-powered visuals for your marketing content
+            Create AI-powered visuals using Sora AI for your marketing content
           </p>
         </div>
 
@@ -111,7 +128,10 @@ const GraphicsGenerator = () => {
           {/* Input Form */}
           <Card>
             <CardHeader>
-              <CardTitle>Configure Graphics</CardTitle>
+              <CardTitle className="flex items-center">
+                <Image className="mr-2 h-5 w-5" />
+                Configure Graphics
+              </CardTitle>
               <CardDescription>Set up parameters for your graphic generation</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -197,20 +217,47 @@ const GraphicsGenerator = () => {
                 </Select>
               </div>
               
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="apiKey">Sora API Configuration</Label>
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    onClick={() => setShowApiKeyInput(!showApiKeyInput)}
+                    className="text-xs"
+                  >
+                    {showApiKeyInput ? "Hide" : "Show"} API Key Input
+                  </Button>
+                </div>
+                {showApiKeyInput && (
+                  <Input
+                    id="apiKey"
+                    type="password"
+                    placeholder="Enter your Sora API key"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    className="font-mono text-sm"
+                  />
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Sora AI will generate visuals based on your content and preferences
+                </p>
+              </div>
+              
               <Button 
                 className="w-full mt-4" 
                 onClick={handleGenerateGraphics}
-                disabled={isGenerating || (selectedContent === 'none' && !customMessage)} // Updated condition
+                disabled={isGenerating || (selectedContent === 'none' && !customMessage)}
               >
                 {isGenerating ? (
                   <>
                     <Clock className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
+                    Generating with Sora AI...
                   </>
                 ) : (
                   <>
                     <Wand2 className="mr-2 h-4 w-4" />
-                    Generate Graphics
+                    Generate Graphics with Sora AI
                   </>
                 )}
               </Button>
@@ -220,17 +267,20 @@ const GraphicsGenerator = () => {
           {/* Output Area */}
           <Card>
             <CardHeader>
-              <CardTitle>Generated Graphics</CardTitle>
+              <CardTitle className="flex items-center">
+                <Image className="mr-2 h-5 w-5" />
+                Sora AI Generated Graphics
+              </CardTitle>
               <CardDescription>
                 {generatedImages.length > 0 ? (
                   <div className="flex items-center">
                     <Badge variant="secondary" className="mr-2">
-                      AI Generated
+                      Sora AI Generated
                     </Badge>
                     {format && <Badge>{format} Format</Badge>}
                   </div>
                 ) : (
-                  "Your AI-generated graphics will appear here"
+                  "Your Sora AI-generated graphics will appear here"
                 )}
               </CardDescription>
             </CardHeader>
@@ -239,8 +289,8 @@ const GraphicsGenerator = () => {
                 <div className="h-64 flex items-center justify-center">
                   <div className="text-center">
                     <Wand2 className="h-10 w-10 mb-4 mx-auto animate-pulse text-primary" />
-                    <p className="text-lg font-medium">Generating graphics...</p>
-                    <p className="text-muted-foreground">Our AI is creating your visuals</p>
+                    <p className="text-lg font-medium">Generating with Sora AI...</p>
+                    <p className="text-muted-foreground">Creating high-quality visuals for your content</p>
                   </div>
                 </div>
               ) : generatedImages.length > 0 ? (
@@ -281,9 +331,9 @@ const GraphicsGenerator = () => {
               ) : (
                 <div className="h-64 flex items-center justify-center text-center text-muted-foreground">
                   <div>
-                    <p>Fill out the form and click "Generate Graphics"</p>
+                    <p>Fill out the form and click "Generate Graphics with Sora AI"</p>
                     <p className="text-sm mt-2">
-                      The AI will create visuals based on your content and preferences
+                      Sora AI will create high-quality, tailored visuals based on your inputs
                     </p>
                   </div>
                 </div>
