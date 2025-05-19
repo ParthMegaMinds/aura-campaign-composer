@@ -22,6 +22,15 @@ export type WordPressTaxonomy = {
   count?: number;
 };
 
+export type WordPressPostInput = {
+  title: string;
+  content: string;
+  status: 'publish' | 'future' | 'draft' | 'pending' | 'private';
+  date?: string; // ISO format date for scheduling
+  categories?: number[];
+  tags?: number[];
+};
+
 export const WordPressService = {
   siteUrl: '',
   
@@ -41,6 +50,51 @@ export const WordPressService = {
       if (storedUrl) this.siteUrl = storedUrl;
     }
     return this.siteUrl;
+  },
+  
+  // Check if API credentials are stored
+  hasApiCredentials(): boolean {
+    return Boolean(localStorage.getItem('wordpress_username') && localStorage.getItem('wordpress_password'));
+  },
+  
+  // Save API credentials (for basic auth)
+  saveApiCredentials(username: string, password: string): void {
+    localStorage.setItem('wordpress_username', username);
+    localStorage.setItem('wordpress_password', password);
+    toast.success("WordPress credentials saved");
+  },
+  
+  // Get API credentials
+  getApiCredentials(): { username: string; password: string } | null {
+    const username = localStorage.getItem('wordpress_username');
+    const password = localStorage.getItem('wordpress_password');
+    
+    if (!username || !password) {
+      return null;
+    }
+    
+    return { username, password };
+  },
+  
+  // Clear API credentials
+  clearApiCredentials(): void {
+    localStorage.removeItem('wordpress_username');
+    localStorage.removeItem('wordpress_password');
+    toast.success("WordPress credentials cleared");
+  },
+  
+  // Helper to get auth headers if credentials exist
+  getAuthHeaders(): HeadersInit {
+    const credentials = this.getApiCredentials();
+    if (!credentials) {
+      return {};
+    }
+    
+    // Base64 encode username:password for Basic Auth
+    const encodedCredentials = btoa(`${credentials.username}:${credentials.password}`);
+    return {
+      'Authorization': `Basic ${encodedCredentials}`
+    };
   },
   
   // Fetch posts from WordPress
@@ -66,7 +120,9 @@ export const WordPressService = {
         queryParams.append('tags', params.tags.join(','));
       }
       
-      const response = await fetch(`${siteUrl}/wp-json/wp/v2/posts?${queryParams}`);
+      const response = await fetch(`${siteUrl}/wp-json/wp/v2/posts?${queryParams}`, {
+        headers: this.getAuthHeaders()
+      });
       
       if (!response.ok) {
         throw new Error(`Failed to fetch WordPress posts: ${response.statusText}`);
@@ -121,7 +177,9 @@ export const WordPressService = {
     }
     
     try {
-      const response = await fetch(`${siteUrl}/wp-json/wp/v2/posts/${id}`);
+      const response = await fetch(`${siteUrl}/wp-json/wp/v2/posts/${id}`, {
+        headers: this.getAuthHeaders()
+      });
       
       if (!response.ok) {
         throw new Error(`Failed to fetch WordPress post: ${response.statusText}`);
@@ -145,7 +203,9 @@ export const WordPressService = {
     }
     
     try {
-      const response = await fetch(`${siteUrl}/wp-json/wp/v2/categories?per_page=100`);
+      const response = await fetch(`${siteUrl}/wp-json/wp/v2/categories?per_page=100`, {
+        headers: this.getAuthHeaders()
+      });
       
       if (!response.ok) {
         throw new Error(`Failed to fetch WordPress categories: ${response.statusText}`);
@@ -169,7 +229,9 @@ export const WordPressService = {
     }
     
     try {
-      const response = await fetch(`${siteUrl}/wp-json/wp/v2/tags?per_page=100`);
+      const response = await fetch(`${siteUrl}/wp-json/wp/v2/tags?per_page=100`, {
+        headers: this.getAuthHeaders()
+      });
       
       if (!response.ok) {
         throw new Error(`Failed to fetch WordPress tags: ${response.statusText}`);
@@ -185,6 +247,17 @@ export const WordPressService = {
 
   // Create draft post
   async createDraft(title: string, content: string, categoryIds: number[] = [], tagIds: number[] = []): Promise<WordPressPost | null> {
+    return this.createPost({
+      title,
+      content,
+      status: 'draft',
+      categories: categoryIds,
+      tags: tagIds
+    });
+  },
+  
+  // Create or schedule a post
+  async createPost(postData: WordPressPostInput): Promise<WordPressPost | null> {
     const siteUrl = this.getSiteUrl();
     
     if (!siteUrl) {
@@ -192,40 +265,70 @@ export const WordPressService = {
       return null;
     }
     
-    try {
-      // Note: This would require authentication which we can't do securely on the client side
-      // In a real implementation, this would need to be handled by a backend service
-      toast.error("Creating WordPress posts requires server-side implementation with authentication");
+    const credentials = this.getApiCredentials();
+    if (!credentials) {
+      toast.error("WordPress credentials not found. Please add your credentials in settings.");
       return null;
+    }
+    
+    try {
+      // Prepare the post data
+      const body = {
+        title: postData.title,
+        content: postData.content,
+        status: postData.status,
+        categories: postData.categories || [],
+        tags: postData.tags || []
+      };
       
-      // The code below would work with proper authentication
-      /*
+      // Add date if provided (for scheduling)
+      if (postData.date) {
+        body['date'] = postData.date;
+      }
+      
       const response = await fetch(`${siteUrl}/wp-json/wp/v2/posts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_AUTH_TOKEN' // Would need proper auth
+          ...this.getAuthHeaders()
         },
-        body: JSON.stringify({
-          title,
-          content,
-          status: 'draft',
-          categories: categoryIds,
-          tags: tagIds
-        })
+        body: JSON.stringify(body)
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to create WordPress draft: ${response.statusText}`);
+        const errorData = await response.json();
+        throw new Error(`Failed to create WordPress post: ${errorData.message || response.statusText}`);
       }
       
-      return await response.json();
-      */
+      const responseData = await response.json();
+      
+      // Show appropriate toast based on status
+      if (postData.status === 'future') {
+        toast.success("WordPress post scheduled successfully");
+      } else if (postData.status === 'publish') {
+        toast.success("WordPress post published successfully");
+      } else {
+        toast.success("WordPress post created successfully");
+      }
+      
+      return responseData;
     } catch (error) {
-      console.error("Error creating WordPress draft:", error);
-      toast.error("Failed to create WordPress draft");
+      console.error("Error creating WordPress post:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to create WordPress post");
       return null;
     }
+  },
+  
+  // Schedule a post
+  async schedulePost(title: string, content: string, scheduleDate: Date, categoryIds: number[] = [], tagIds: number[] = []): Promise<WordPressPost | null> {
+    return this.createPost({
+      title,
+      content,
+      status: 'future',
+      date: scheduleDate.toISOString(),
+      categories: categoryIds,
+      tags: tagIds
+    });
   },
 
   // Get blog stats
@@ -242,7 +345,9 @@ export const WordPressService = {
       }
       
       // Fetch total post count
-      const countResponse = await fetch(`${siteUrl}/wp-json/wp/v2/posts?per_page=1&status=publish`);
+      const countResponse = await fetch(`${siteUrl}/wp-json/wp/v2/posts?per_page=1&status=publish`, {
+        headers: this.getAuthHeaders()
+      });
       const totalPosts = parseInt(countResponse.headers.get('X-WP-Total') || '0');
       
       // Fetch recent posts count (last 7 days)

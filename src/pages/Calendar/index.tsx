@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar as CalendarIcon, Clock, Globe } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Globe, Wordpress } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WordPressService, WordPressPost } from '@/services/WordPressService';
 import { toast } from "@/components/ui/sonner";
+import { WordPressBlogManager } from '@/components/WordPress/BlogManager';
 
 const CalendarPlanner = () => {
   const [selected, setSelected] = useState<Date | undefined>(new Date());
@@ -241,9 +242,10 @@ const CalendarPlanner = () => {
             
             {/* Content Tabs (Local & WordPress) */}
             <Tabs defaultValue="local" className="mb-6">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="local">Local Content</TabsTrigger>
                 <TabsTrigger value="wordpress" disabled={!wpEnabled}>WordPress Blog</TabsTrigger>
+                <TabsTrigger value="wp-manager" disabled={!wpEnabled}>Blog Manager</TabsTrigger>
               </TabsList>
               
               {/* Local Content Tab */}
@@ -458,6 +460,11 @@ const CalendarPlanner = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+              
+              {/* WordPress Blog Manager Tab */}
+              <TabsContent value="wp-manager">
+                <WordPressBlogManager />
               </TabsContent>
             </Tabs>
           </div>
