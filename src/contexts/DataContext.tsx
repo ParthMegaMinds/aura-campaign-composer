@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { toast } from "@/components/ui/sonner";
 
@@ -11,6 +10,7 @@ export type ICP = {
   persona: string[];
   businessSize: string;
   tone: string;
+  designations?: string[]; // Added designations field
 };
 
 export type ContentItem = {
@@ -128,7 +128,8 @@ export const DataProvider = ({ children }: DataProviderProps) => {
         location: "United States",
         persona: ["CTO", "Tech Lead"],
         businessSize: "SME",
-        tone: "Professional"
+        tone: "Professional",
+        designations: ["cto", "developers"] // Added sample designations
       };
       
       setICPs([sampleICP]);
