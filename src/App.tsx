@@ -22,6 +22,8 @@ import ContentLibrary from "./pages/ContentLibrary";
 import CampaignsPage from "./pages/Campaign/CampaignsPage";
 import CreateCampaign from "./pages/Campaign/CreateCampaign";
 import CampaignDetail from "./pages/Campaign/CampaignDetail";
+import CampaignAnalytics from "./pages/Campaign/CampaignAnalytics";
+import CampaignPDFReport from "./pages/Campaign/CampaignPDFReport";
 import NotFound from "./pages/NotFound";
 
 // Components
@@ -53,6 +55,8 @@ const App = () => (
               <Route path="/campaigns" element={<ProtectedRoute><CampaignsPage /></ProtectedRoute>} />
               <Route path="/create-campaign" element={<ProtectedRoute><CreateCampaign /></ProtectedRoute>} />
               <Route path="/campaign/:id" element={<ProtectedRoute><CampaignDetail /></ProtectedRoute>} />
+              <Route path="/campaign/:id/analytics" element={<ProtectedRoute><CampaignAnalytics /></ProtectedRoute>} />
+              <Route path="/campaign/:id/pdf-report" element={<ProtectedRoute><CampaignPDFReport /></ProtectedRoute>} />
               
               {/* Catch All Route */}
               <Route path="*" element={<NotFound />} />

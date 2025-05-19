@@ -14,7 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
-import { Calendar, Image, FileText, Trash, Edit, Copy, MoreVertical } from 'lucide-react';
+import { Calendar, Image, FileText, Trash, Edit, Copy, MoreVertical, BarChart } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -95,10 +95,16 @@ const CampaignDetail = () => {
             </div>
             <p className="text-muted-foreground">{campaign.description}</p>
           </div>
-          <Button onClick={() => navigate(`/campaign/${campaign.id}/edit`)}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit Campaign
-          </Button>
+          <div className="flex gap-3">
+            <Button onClick={() => navigate(`/campaign/${campaign.id}/analytics`)} variant="outline">
+              <BarChart className="mr-2 h-4 w-4" />
+              View Analytics
+            </Button>
+            <Button onClick={() => navigate(`/campaign/${campaign.id}/edit`)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Campaign
+            </Button>
+          </div>
         </div>
 
         {/* Campaign Overview */}

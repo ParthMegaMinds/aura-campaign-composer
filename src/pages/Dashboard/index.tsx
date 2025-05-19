@@ -1,14 +1,22 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useData } from '@/contexts/DataContext';
+import { Button } from '@/components/ui/button';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
          PieChart, Pie, Legend, Cell, BarChart, Bar } from 'recharts';
-import { ChartLine, PieChart as PieChartIcon, BarChart3 } from 'lucide-react';
+import { ChartLine, PieChartIcon, BarChart3, BarChart2 } from 'lucide-react';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
 
 const Dashboard = () => {
   const { campaigns, contents, calendarItems } = useData();
+  const navigate = useNavigate();
   
   // Sample data for charts - in a real app, this would be derived from actual data
   const contentOverTimeData = [
@@ -32,6 +40,10 @@ const Dashboard = () => {
     { name: 'Completed', count: 2 },
     { name: 'Planned', count: 3 },
   ];
+  
+  const recentCampaigns = campaigns
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 3);
   
   const CONTENT_TYPE_COLORS = ['#8884d8', '#82ca9d', '#ffc658'];
   
@@ -97,15 +109,19 @@ const Dashboard = () => {
               <CardDescription>Monthly content creation trends</CardDescription>
             </CardHeader>
             <CardContent className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ChartContainer
+                config={{
+                  count: { color: "#8884d8" }
+                }}
+              >
                 <LineChart data={contentOverTimeData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip labelStyle={{ color: '#111' }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
                   <Line type="monotone" dataKey="count" stroke="#8884d8" activeDot={{ r: 8 }} />
                 </LineChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
           
@@ -115,7 +131,7 @@ const Dashboard = () => {
               <CardDescription>Breakdown by content format</CardDescription>
             </CardHeader>
             <CardContent className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ChartContainer config={{}}>
                 <PieChart>
                   <Pie
                     data={contentTypeData}
@@ -131,35 +147,89 @@ const Dashboard = () => {
                       <Cell key={`cell-${index}`} fill={CONTENT_TYPE_COLORS[index % CONTENT_TYPE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => [`${value}`, 'Count']} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
                   <Legend />
                 </PieChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Campaign Status</CardTitle>
-            <CardDescription>Current campaign progress</CardDescription>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={campaignStatusData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`${value}`, 'Count']} />
-                <Bar dataKey="count" fill="#8884d8">
-                  {campaignStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CONTENT_TYPE_COLORS[index % CONTENT_TYPE_COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Campaign Status</CardTitle>
+              <CardDescription>Current campaign progress</CardDescription>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              <ChartContainer config={{}}>
+                <BarChart data={campaignStatusData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="count" fill="#8884d8">
+                    {campaignStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={CONTENT_TYPE_COLORS[index % CONTENT_TYPE_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle>Recent Campaigns</CardTitle>
+                <Button 
+                  variant="link" 
+                  className="text-sm p-0 h-auto"
+                  onClick={() => navigate('/campaigns')}
+                >
+                  View All
+                </Button>
+              </div>
+              <CardDescription>Campaign analytics</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentCampaigns.length > 0 ? (
+                  recentCampaigns.map(campaign => (
+                    <div 
+                      key={campaign.id}
+                      className="flex items-center justify-between border-b pb-3 last:border-b-0 last:pb-0"
+                    >
+                      <div className="truncate">
+                        <p className="font-medium truncate">{campaign.title}</p>
+                        <p className="text-xs text-muted-foreground">{campaign.contents.length} pieces of content</p>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => navigate(`/campaign/${campaign.id}/analytics`)}
+                      >
+                        <BarChart2 className="h-3.5 w-3.5 mr-1" />
+                        Analytics
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    <p>No campaigns created yet</p>
+                    <Button 
+                      variant="link" 
+                      className="mt-2 h-auto p-0"
+                      onClick={() => navigate('/create-campaign')}
+                    >
+                      Create your first campaign
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </MainLayout>
   );
