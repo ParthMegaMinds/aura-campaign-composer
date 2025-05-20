@@ -20,7 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from '@/components/ui/badge';
-import { Trash, Save, User, Users, Briefcase, Wrench, Cog, ChartBar, Projector, Building, Handshake } from 'lucide-react';
+import { Trash, Save, User, Users, Briefcase, Wrench, Cog, ChartBar, Projector, Building, Handshake, Globe } from 'lucide-react';
 import { toast } from "@/components/ui/sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -37,6 +37,7 @@ const ICPBuilder = () => {
   const [techStackInput, setTechStackInput] = useState('');
   const [personaInput, setPersonaInput] = useState('');
   const [designations, setDesignations] = useState<string[]>([]);
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
   const industries = [
     'SaaS', 'FinTech', 'EdTech', 'Healthcare', 'E-commerce', 
@@ -46,6 +47,23 @@ const ICPBuilder = () => {
   const businessSizes = ['Startup', 'SME', 'Enterprise'];
   
   const tones = ['Bold', 'Formal', 'Friendly', 'Conversational', 'Professional', 'Technical'];
+
+  const locations = [
+    'United States',
+    'Canada',
+    'United Kingdom',
+    'Australia',
+    'Germany',
+    'France',
+    'Japan',
+    'China',
+    'India',
+    'Brazil',
+    'Mexico',
+    'Netherlands',
+    'Singapore',
+    'Global'
+  ];
 
   const availableDesignations = [
     { id: 'ceo', label: 'CEO', icon: Building },
@@ -96,8 +114,22 @@ const ICPBuilder = () => {
     });
   };
 
+  const isFormValid = () => {
+    return (
+      name.trim() !== '' && 
+      industry !== '' && 
+      techStack.length > 0 && 
+      location !== '' && 
+      persona.length > 0 && 
+      businessSize !== '' && 
+      tone !== ''
+    );
+  };
+
   const handleSave = () => {
-    if (!name || !industry || techStack.length === 0 || !location || persona.length === 0 || !businessSize || !tone) {
+    setFormSubmitted(true);
+    
+    if (!isFormValid()) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -124,6 +156,7 @@ const ICPBuilder = () => {
     setTechStackInput('');
     setPersonaInput('');
     setDesignations([]);
+    setFormSubmitted(false);
   };
 
   // AI-generated campaign suggestion based on ICP
@@ -166,13 +199,14 @@ const ICPBuilder = () => {
                     value={name} 
                     onChange={e => setName(e.target.value)}
                     placeholder="e.g., Tech SaaS CTO"
+                    className={formSubmitted && !name.trim() ? "border-red-500" : ""}
                   />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="industry">Industry</Label>
                   <Select onValueChange={setIndustry} value={industry}>
-                    <SelectTrigger>
+                    <SelectTrigger className={formSubmitted && !industry ? "border-red-500" : ""}>
                       <SelectValue placeholder="Select industry" />
                     </SelectTrigger>
                     <SelectContent>
@@ -191,6 +225,7 @@ const ICPBuilder = () => {
                     onChange={e => setTechStackInput(e.target.value)}
                     onKeyDown={handleAddTechStack}
                     placeholder="Type and press Enter to add"
+                    className={formSubmitted && techStack.length === 0 ? "border-red-500" : ""}
                   />
                   <div className="flex flex-wrap gap-2 mt-2">
                     {techStack.map((tech, index) => (
@@ -210,12 +245,16 @@ const ICPBuilder = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="location">Location</Label>
-                  <Input 
-                    id="location" 
-                    value={location} 
-                    onChange={e => setLocation(e.target.value)}
-                    placeholder="e.g., United States, Europe"
-                  />
+                  <Select onValueChange={setLocation} value={location}>
+                    <SelectTrigger className={formSubmitted && !location ? "border-red-500" : ""}>
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {locations.map(loc => (
+                        <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="space-y-2">
@@ -226,6 +265,7 @@ const ICPBuilder = () => {
                     onChange={e => setPersonaInput(e.target.value)}
                     onKeyDown={handleAddPersona}
                     placeholder="Type and press Enter to add"
+                    className={formSubmitted && persona.length === 0 ? "border-red-500" : ""}
                   />
                   <div className="flex flex-wrap gap-2 mt-2">
                     {persona.map((p, index) => (
@@ -271,7 +311,7 @@ const ICPBuilder = () => {
                 <div className="space-y-2">
                   <Label htmlFor="businessSize">Business Size</Label>
                   <Select onValueChange={setBusinessSize} value={businessSize}>
-                    <SelectTrigger>
+                    <SelectTrigger className={formSubmitted && !businessSize ? "border-red-500" : ""}>
                       <SelectValue placeholder="Select business size" />
                     </SelectTrigger>
                     <SelectContent>
@@ -285,7 +325,7 @@ const ICPBuilder = () => {
                 <div className="space-y-2">
                   <Label htmlFor="tone">Tone of Voice</Label>
                   <Select onValueChange={setTone} value={tone}>
-                    <SelectTrigger>
+                    <SelectTrigger className={formSubmitted && !tone ? "border-red-500" : ""}>
                       <SelectValue placeholder="Select tone" />
                     </SelectTrigger>
                     <SelectContent>
