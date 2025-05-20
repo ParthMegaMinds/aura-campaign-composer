@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/MainLayout';
@@ -211,7 +210,7 @@ const CampaignAnalytics = () => {
         
         {/* Overview metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
+          <Card className="shadow">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total Views</CardTitle>
             </CardHeader>
@@ -221,7 +220,7 @@ const CampaignAnalytics = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="shadow">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
             </CardHeader>
@@ -231,7 +230,7 @@ const CampaignAnalytics = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="shadow">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Conversions</CardTitle>
             </CardHeader>
@@ -241,7 +240,7 @@ const CampaignAnalytics = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="shadow">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Engagement Rate</CardTitle>
             </CardHeader>
@@ -262,40 +261,46 @@ const CampaignAnalytics = () => {
           
           <TabsContent value="overview" className="space-y-6">
             {/* Time series chart */}
-            <Card className="shadow-sm">
+            <Card className="shadow">
               <CardHeader>
                 <CardTitle>Campaign Performance Over Time</CardTitle>
                 <CardDescription>Views and engagement metrics for the past 30 days</CardDescription>
               </CardHeader>
-              <CardContent className="h-[400px] pt-2">
-                <ChartContainer
-                  config={{
-                    views: { color: "#0088FE" },
-                    engagement: { color: "#00C49F" },
-                  }}
-                >
+              <CardContent className="h-[400px] pt-4">
+                <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={timeSeriesData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis />
-                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Tooltip content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-background border border-border p-2 rounded shadow-lg">
+                            <p className="font-medium text-sm">{label}</p>
+                            <p className="text-sm text-blue-500">Views: {payload[0].value}</p>
+                            <p className="text-sm text-green-500">Engagement: {payload[1].value}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }} />
                     <Legend />
                     <Line type="monotone" dataKey="views" stroke="#0088FE" activeDot={{ r: 8 }} />
                     <Line type="monotone" dataKey="engagement" stroke="#00C49F" />
                   </LineChart>
-                </ChartContainer>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
             
             {/* Content type distribution */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="shadow-sm">
+              <Card className="shadow">
                 <CardHeader>
                   <CardTitle>Content Type Distribution</CardTitle>
                   <CardDescription>Breakdown by content format</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[300px] pt-2">
-                  <ChartContainer config={{}}>
+                <CardContent className="h-[300px] pt-4">
+                  <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={contentTypeData}
@@ -311,36 +316,56 @@ const CampaignAnalytics = () => {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Tooltip content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-background border border-border p-2 rounded shadow-lg">
+                              <p className="text-sm font-medium">{payload[0].name}</p>
+                              <p className="text-sm">Count: {payload[0].value}</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }} />
                     </PieChart>
-                  </ChartContainer>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
               
-              <Card className="shadow-sm">
+              <Card className="shadow">
                 <CardHeader>
                   <CardTitle>Campaign Status</CardTitle>
                   <CardDescription>Content status breakdown</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[300px] pt-2">
-                  <ChartContainer config={{}}>
+                <CardContent className="h-[300px] pt-4">
+                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={[
                       { name: 'Draft', count: campaignCalendarItems.filter(i => i?.status === 'draft').length },
                       { name: 'Ready', count: campaignCalendarItems.filter(i => i?.status === 'ready').length },
                       { name: 'Scheduled', count: campaignCalendarItems.filter(i => i?.status === 'scheduled').length },
                       { name: 'Live', count: campaignCalendarItems.filter(i => i?.status === 'live').length },
-                    ]} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    ]} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Tooltip content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="bg-background border border-border p-2 rounded shadow-lg">
+                              <p className="text-sm font-medium">{label}</p>
+                              <p className="text-sm">Count: {payload[0].value}</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }} />
                       <Bar dataKey="count" fill="#8884d8">
                         {[0, 1, 2, 3].map((index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Bar>
                     </BarChart>
-                  </ChartContainer>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
             </div>
@@ -348,29 +373,40 @@ const CampaignAnalytics = () => {
           
           <TabsContent value="platform" className="space-y-6">
             {/* Platform performance */}
-            <Card className="shadow-sm">
+            <Card className="shadow">
               <CardHeader>
                 <CardTitle>Platform Performance Comparison</CardTitle>
                 <CardDescription>Comparing engagement across different platforms</CardDescription>
               </CardHeader>
-              <CardContent className="h-[400px] pt-2">
-                <ChartContainer config={{}}>
+              <CardContent className="h-[400px] pt-4">
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={platformData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
                     <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
-                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Tooltip content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-background border border-border p-2 rounded shadow-lg">
+                            <p className="text-sm font-medium">{label}</p>
+                            <p className="text-sm text-purple-500">Engagement: {payload[0].value}%</p>
+                            <p className="text-sm text-green-500">Clicks: {payload[1].value}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }} />
                     <Legend />
                     <Bar yAxisId="left" dataKey="engagement" name="Engagement %" fill="#8884d8" />
                     <Bar yAxisId="right" dataKey="clicks" name="Clicks" fill="#82ca9d" />
                   </BarChart>
-                </ChartContainer>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
             
             {/* Platform data table */}
-            <Card className="shadow-sm">
+            <Card className="shadow">
               <CardHeader>
                 <CardTitle>Platform Data</CardTitle>
                 <CardDescription>Detailed metrics by platform</CardDescription>
@@ -410,7 +446,7 @@ const CampaignAnalytics = () => {
           
           <TabsContent value="content" className="space-y-6">
             {/* Content performance */}
-            <Card className="shadow-sm">
+            <Card className="shadow">
               <CardHeader>
                 <CardTitle>Content Performance</CardTitle>
                 <CardDescription>Analytics for individual content pieces</CardDescription>
@@ -453,7 +489,7 @@ const CampaignAnalytics = () => {
             </Card>
             
             {/* AI-generated insights */}
-            <Card className="shadow-sm">
+            <Card className="shadow">
               <CardHeader>
                 <CardTitle>AI Insights</CardTitle>
                 <CardDescription>Automated analysis and recommendations</CardDescription>
