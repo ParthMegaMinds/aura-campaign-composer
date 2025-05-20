@@ -103,35 +103,41 @@ const Dashboard = () => {
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <Card>
+          <Card className="w-full">
             <CardHeader>
               <CardTitle>Content Production Over Time</CardTitle>
               <CardDescription>Monthly content creation trends</CardDescription>
             </CardHeader>
-            <CardContent className="h-[300px]">
-              <ChartContainer
-                config={{
-                  count: { color: "#8884d8" }
-                }}
-              >
+            <CardContent className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={contentOverTimeData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Tooltip content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-background p-2 border border-border rounded shadow-sm">
+                          <p className="font-medium">{label}</p>
+                          <p className="text-sm">{`Count: ${payload[0].value}`}</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }} />
                   <Line type="monotone" dataKey="count" stroke="#8884d8" activeDot={{ r: 8 }} />
                 </LineChart>
-              </ChartContainer>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="w-full">
             <CardHeader>
               <CardTitle>Content Type Distribution</CardTitle>
               <CardDescription>Breakdown by content format</CardDescription>
             </CardHeader>
-            <CardContent className="h-[300px]">
-              <ChartContainer config={{}}>
+            <CardContent className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={contentTypeData}
@@ -147,10 +153,20 @@ const Dashboard = () => {
                       <Cell key={`cell-${index}`} fill={CONTENT_TYPE_COLORS[index % CONTENT_TYPE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Tooltip content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-background p-2 border border-border rounded shadow-sm">
+                          <p className="font-medium">{payload[0].name}</p>
+                          <p className="text-sm">{`Value: ${payload[0].value}`}</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }} />
                   <Legend />
                 </PieChart>
-              </ChartContainer>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </div>
@@ -162,19 +178,29 @@ const Dashboard = () => {
               <CardDescription>Current campaign progress</CardDescription>
             </CardHeader>
             <CardContent className="h-[300px]">
-              <ChartContainer config={{}}>
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={campaignStatusData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Tooltip content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-background p-2 border border-border rounded shadow-sm">
+                          <p className="font-medium">{label}</p>
+                          <p className="text-sm">{`Count: ${payload[0].value}`}</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }} />
                   <Bar dataKey="count" fill="#8884d8">
                     {campaignStatusData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={CONTENT_TYPE_COLORS[index % CONTENT_TYPE_COLORS.length]} />
                     ))}
                   </Bar>
                 </BarChart>
-              </ChartContainer>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
           
