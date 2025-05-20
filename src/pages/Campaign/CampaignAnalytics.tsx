@@ -166,14 +166,14 @@ const CampaignAnalytics = () => {
   
   return (
     <MainLayout>
-      <div className="space-y-6 p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="space-y-6 p-6 max-w-[1400px] mx-auto">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-2">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="p-0"
+                className="p-0 h-auto"
                 onClick={() => navigate(`/campaign/${id}`)}
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
@@ -181,12 +181,12 @@ const CampaignAnalytics = () => {
               </Button>
             </div>
             <h1 className="text-3xl font-bold tracking-tight">{campaign.title} Analytics</h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground mt-1">
               {format(parseISO(campaign.startDate), 'MMM d, yyyy')} - {format(parseISO(campaign.endDate), 'MMM d, yyyy')}
             </p>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 self-end sm:self-auto">
             <Button variant="outline" onClick={handleDownloadReport}>
               <DownloadIcon className="mr-2 h-4 w-4" />
               Download Report
@@ -199,9 +199,9 @@ const CampaignAnalytics = () => {
         </div>
 
         {/* Date range selector */}
-        <div className="flex justify-end">
-          <Tabs defaultValue={dateRange} onValueChange={(v) => setDateRange(v as any)}>
-            <TabsList>
+        <div className="flex justify-end mb-4">
+          <Tabs defaultValue={dateRange} onValueChange={(v) => setDateRange(v as any)} className="w-auto">
+            <TabsList className="grid grid-cols-3">
               <TabsTrigger value="7days">Last 7 days</TabsTrigger>
               <TabsTrigger value="30days">Last 30 days</TabsTrigger>
               <TabsTrigger value="all">All time</TabsTrigger>
@@ -254,20 +254,20 @@ const CampaignAnalytics = () => {
         
         {/* Charts and detailed data */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid grid-cols-3 w-[400px]">
+          <TabsList className="grid w-full max-w-md grid-cols-3 mb-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="platform">Platform Data</TabsTrigger>
             <TabsTrigger value="content">Content Performance</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="overview" className="space-y-6 pt-4">
+          <TabsContent value="overview" className="space-y-6">
             {/* Time series chart */}
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle>Campaign Performance Over Time</CardTitle>
                 <CardDescription>Views and engagement metrics for the past 30 days</CardDescription>
               </CardHeader>
-              <CardContent className="h-[400px]">
+              <CardContent className="h-[400px] pt-2">
                 <ChartContainer
                   config={{
                     views: { color: "#0088FE" },
@@ -289,12 +289,12 @@ const CampaignAnalytics = () => {
             
             {/* Content type distribution */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
+              <Card className="shadow-sm">
                 <CardHeader>
                   <CardTitle>Content Type Distribution</CardTitle>
                   <CardDescription>Breakdown by content format</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[300px]">
+                <CardContent className="h-[300px] pt-2">
                   <ChartContainer config={{}}>
                     <PieChart>
                       <Pie
@@ -317,12 +317,12 @@ const CampaignAnalytics = () => {
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="shadow-sm">
                 <CardHeader>
                   <CardTitle>Campaign Status</CardTitle>
                   <CardDescription>Content status breakdown</CardDescription>
                 </CardHeader>
-                <CardContent className="h-[300px]">
+                <CardContent className="h-[300px] pt-2">
                   <ChartContainer config={{}}>
                     <BarChart data={[
                       { name: 'Draft', count: campaignCalendarItems.filter(i => i?.status === 'draft').length },
@@ -346,16 +346,16 @@ const CampaignAnalytics = () => {
             </div>
           </TabsContent>
           
-          <TabsContent value="platform" className="space-y-6 pt-4">
+          <TabsContent value="platform" className="space-y-6">
             {/* Platform performance */}
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle>Platform Performance Comparison</CardTitle>
                 <CardDescription>Comparing engagement across different platforms</CardDescription>
               </CardHeader>
-              <CardContent className="h-[400px]">
+              <CardContent className="h-[400px] pt-2">
                 <ChartContainer config={{}}>
-                  <BarChart data={platformData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                  <BarChart data={platformData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
@@ -370,86 +370,90 @@ const CampaignAnalytics = () => {
             </Card>
             
             {/* Platform data table */}
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle>Platform Data</CardTitle>
                 <CardDescription>Detailed metrics by platform</CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Platform</TableHead>
-                      <TableHead>Posts</TableHead>
-                      <TableHead>Engagement</TableHead>
-                      <TableHead>Clicks</TableHead>
-                      <TableHead>Conversions</TableHead>
-                      <TableHead className="text-right">CTR</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {platformData.map((platform) => (
-                      <TableRow key={platform.name}>
-                        <TableCell className="font-medium">{platform.name}</TableCell>
-                        <TableCell>{platform.posts}</TableCell>
-                        <TableCell>{platform.engagement}%</TableCell>
-                        <TableCell>{platform.clicks}</TableCell>
-                        <TableCell>{platform.conversions}</TableCell>
-                        <TableCell className="text-right">
-                          {((platform.clicks / (platform.posts * 100)) * 100).toFixed(1)}%
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Platform</TableHead>
+                        <TableHead>Posts</TableHead>
+                        <TableHead>Engagement</TableHead>
+                        <TableHead>Clicks</TableHead>
+                        <TableHead>Conversions</TableHead>
+                        <TableHead className="text-right">CTR</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {platformData.map((platform) => (
+                        <TableRow key={platform.name}>
+                          <TableCell className="font-medium">{platform.name}</TableCell>
+                          <TableCell>{platform.posts}</TableCell>
+                          <TableCell>{platform.engagement}%</TableCell>
+                          <TableCell>{platform.clicks}</TableCell>
+                          <TableCell>{platform.conversions}</TableCell>
+                          <TableCell className="text-right">
+                            {((platform.clicks / (platform.posts * 100)) * 100).toFixed(1)}%
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
           
-          <TabsContent value="content" className="space-y-6 pt-4">
+          <TabsContent value="content" className="space-y-6">
             {/* Content performance */}
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle>Content Performance</CardTitle>
                 <CardDescription>Analytics for individual content pieces</CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Views</TableHead>
-                      <TableHead>Engagement</TableHead>
-                      <TableHead>Clicks</TableHead>
-                      <TableHead className="text-right">CTR</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {campaignContents.map((content) => {
-                      const views = Math.floor(Math.random() * 500) + 100;
-                      const engagement = Math.floor(Math.random() * 100) + 20;
-                      const clicks = Math.floor(Math.random() * 200) + 50;
-                      const ctr = ((clicks / views) * 100).toFixed(1);
-                      
-                      return (
-                        <TableRow key={content!.id}>
-                          <TableCell className="font-medium">{content!.title}</TableCell>
-                          <TableCell>{content!.type}</TableCell>
-                          <TableCell>{views}</TableCell>
-                          <TableCell>{engagement}</TableCell>
-                          <TableCell>{clicks}</TableCell>
-                          <TableCell className="text-right">{ctr}%</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Views</TableHead>
+                        <TableHead>Engagement</TableHead>
+                        <TableHead>Clicks</TableHead>
+                        <TableHead className="text-right">CTR</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {campaignContents.map((content) => {
+                        const views = Math.floor(Math.random() * 500) + 100;
+                        const engagement = Math.floor(Math.random() * 100) + 20;
+                        const clicks = Math.floor(Math.random() * 200) + 50;
+                        const ctr = ((clicks / views) * 100).toFixed(1);
+                        
+                        return (
+                          <TableRow key={content!.id}>
+                            <TableCell className="font-medium">{content!.title}</TableCell>
+                            <TableCell>{content!.type}</TableCell>
+                            <TableCell>{views}</TableCell>
+                            <TableCell>{engagement}</TableCell>
+                            <TableCell>{clicks}</TableCell>
+                            <TableCell className="text-right">{ctr}%</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
             
             {/* AI-generated insights */}
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle>AI Insights</CardTitle>
                 <CardDescription>Automated analysis and recommendations</CardDescription>
