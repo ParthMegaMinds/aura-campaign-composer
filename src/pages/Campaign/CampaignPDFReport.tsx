@@ -18,7 +18,7 @@ const CampaignPDFReport = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const { campaigns, getICPById } = useData();
+  const { campaigns, getICPById, getCalendarItemById, getContentById } = useData();
   
   const campaign = campaigns.find(c => c.id === id);
   
