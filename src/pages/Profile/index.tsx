@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import MainLayout from '@/components/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -132,7 +131,7 @@ const Profile = () => {
                     <Label htmlFor="role">Role</Label>
                     <Select
                       value={profileData.role}
-                      onValueChange={(value) => setProfileData({...profileData, role: value})}
+                      onValueChange={(value) => setProfileData({...profileData, role: value as 'marketing' | 'design' | 'sales'})}
                     >
                       <SelectTrigger>
                         <SelectValue />
