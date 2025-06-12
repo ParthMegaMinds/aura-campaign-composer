@@ -1,8 +1,10 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/components/ui/sonner";
+import type { User } from '@supabase/supabase-js';
 
-type User = {
+type AuthUser = {
   id: string;
   email: string;
   name: string;
@@ -10,7 +12,7 @@ type User = {
 };
 
 type AuthContextType = {
-  user: User | null;
+  user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (email: string, password: string, name: string, role: 'marketing' | 'design' | 'sales') => Promise<boolean>;
@@ -25,38 +27,79 @@ type AuthProviderProps = {
 };
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Check if user is logged in from localStorage
-    const storedUser = localStorage.getItem('aiva_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    // Get initial session
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await loadUserProfile(session.user);
+      }
+      setLoading(false);
+    };
+
+    getInitialSession();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        await loadUserProfile(session.user);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const loadUserProfile = async (authUser: User) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading profile:', error);
+        return;
+      }
+
+      if (profile) {
+        setUser({
+          id: authUser.id,
+          email: authUser.email || '',
+          name: profile.full_name || authUser.email?.split('@')[0] || '',
+          role: 'marketing' // Default role, can be stored in profile later
+        });
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
       
-      // Mock login - in a real app, this would call your authentication API
-      if (email && password) {
-        const newUser = {
-          id: Math.random().toString(36).substring(2, 11),
-          email,
-          name: email.split('@')[0],
-          role: 'marketing' as const
-        };
-        
-        setUser(newUser);
-        localStorage.setItem('aiva_user', JSON.stringify(newUser));
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return false;
+      }
+
+      if (data.user) {
         toast.success("Login successful!");
         return true;
       }
       
-      toast.error("Invalid credentials");
       return false;
     } catch (error) {
       console.error("Login error:", error);
@@ -76,22 +119,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setLoading(true);
       
-      // Mock signup - in a real app, this would call your authentication API
-      if (email && password && name && role) {
-        const newUser = {
-          id: Math.random().toString(36).substring(2, 11),
-          email,
-          name,
-          role
-        };
-        
-        setUser(newUser);
-        localStorage.setItem('aiva_user', JSON.stringify(newUser));
-        toast.success("Account created successfully!");
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+            role: role
+          }
+        }
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return false;
+      }
+
+      if (data.user) {
+        toast.success("Account created successfully! Please check your email to verify your account.");
         return true;
       }
       
-      toast.error("Please fill all required fields");
       return false;
     } catch (error) {
       console.error("Signup error:", error);
@@ -102,17 +150,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('aiva_user');
-    toast.info("You've been logged out");
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      toast.info("You've been logged out");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Error logging out");
+    }
   };
 
-  const updateUserRole = (role: 'marketing' | 'design' | 'sales') => {
+  const updateUserRole = async (role: 'marketing' | 'design' | 'sales') => {
     if (user) {
       const updatedUser = { ...user, role };
       setUser(updatedUser);
-      localStorage.setItem('aiva_user', JSON.stringify(updatedUser));
       toast.success(`Role updated to ${role}`);
     }
   };
