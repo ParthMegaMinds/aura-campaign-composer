@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/MainLayout';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/contexts/SupabaseDataContext';
 import { Button } from '@/components/ui/button';
 import {
   Card,
