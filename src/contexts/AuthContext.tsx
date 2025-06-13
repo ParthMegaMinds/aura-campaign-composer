@@ -15,7 +15,9 @@ type AuthContextType = {
   user: AuthUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
+  loginWithGoogle: () => Promise<boolean>;
   signup: (email: string, password: string, name: string, role: 'marketing' | 'design' | 'sales') => Promise<boolean>;
+  signupWithGoogle: () => Promise<boolean>;
   logout: () => void;
   updateUserRole: (role: 'marketing' | 'design' | 'sales') => void;
 };
@@ -109,6 +111,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setLoading(false);
     }
   };
+
+  const loginWithGoogle = async (): Promise<boolean> => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return false;
+      }
+
+      // Note: OAuth redirects, so we won't reach this point normally
+      return true;
+    } catch (error) {
+      console.error("Google login error:", error);
+      toast.error("Google login failed. Please try again.");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const signup = async (
     email: string, 
@@ -126,7 +155,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           data: {
             full_name: name,
             role: role
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
 
@@ -144,6 +174,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error) {
       console.error("Signup error:", error);
       toast.error("Signup failed. Please try again.");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signupWithGoogle = async (): Promise<boolean> => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/onboarding`
+        }
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return false;
+      }
+
+      // Note: OAuth redirects, so we won't reach this point normally
+      return true;
+    } catch (error) {
+      console.error("Google signup error:", error);
+      toast.error("Google signup failed. Please try again.");
       return false;
     } finally {
       setLoading(false);
@@ -170,7 +227,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, updateUserRole }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      loginWithGoogle, 
+      signup, 
+      signupWithGoogle, 
+      logout, 
+      updateUserRole 
+    }}>
       {children}
     </AuthContext.Provider>
   );
