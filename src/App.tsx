@@ -7,11 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SupabaseDataProvider } from "@/contexts/SupabaseDataContext";
 
-// Auth Routes
-import Login from "./pages/Auth/Login";
-import Signup from "./pages/Auth/Signup";
-import Onboarding from "./pages/Auth/Onboarding";
-
 // Main Routes
 import Dashboard from "./pages/Dashboard";
 import ICPBuilder from "./pages/ICPBuilder";
@@ -28,9 +23,6 @@ import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
-// Components
-import ProtectedRoute from "./components/ProtectedRoute";
-
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -42,25 +34,20 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Auth Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              
-              {/* Protected Routes */}
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/icp-builder" element={<ProtectedRoute><ICPBuilder /></ProtectedRoute>} />
-              <Route path="/content-generator" element={<ProtectedRoute><ContentGenerator /></ProtectedRoute>} />
-              <Route path="/graphics-generator" element={<ProtectedRoute><GraphicsGenerator /></ProtectedRoute>} />
-              <Route path="/calendar" element={<ProtectedRoute><CalendarPlanner /></ProtectedRoute>} />
-              <Route path="/content-library" element={<ProtectedRoute><ContentLibrary /></ProtectedRoute>} />
-              <Route path="/campaigns" element={<ProtectedRoute><CampaignsPage /></ProtectedRoute>} />
-              <Route path="/create-campaign" element={<ProtectedRoute><CreateCampaign /></ProtectedRoute>} />
-              <Route path="/campaign/:id" element={<ProtectedRoute><CampaignDetail /></ProtectedRoute>} />
-              <Route path="/campaign/:id/analytics" element={<ProtectedRoute><CampaignAnalytics /></ProtectedRoute>} />
-              <Route path="/campaign/:id/pdf-report" element={<ProtectedRoute><CampaignPDFReport /></ProtectedRoute>} />
-              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              {/* Main Routes - No authentication required */}
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/icp-builder" element={<ICPBuilder />} />
+              <Route path="/content-generator" element={<ContentGenerator />} />
+              <Route path="/graphics-generator" element={<GraphicsGenerator />} />
+              <Route path="/calendar" element={<CalendarPlanner />} />
+              <Route path="/content-library" element={<ContentLibrary />} />
+              <Route path="/campaigns" element={<CampaignsPage />} />
+              <Route path="/create-campaign" element={<CreateCampaign />} />
+              <Route path="/campaign/:id" element={<CampaignDetail />} />
+              <Route path="/campaign/:id/analytics" element={<CampaignAnalytics />} />
+              <Route path="/campaign/:id/pdf-report" element={<CampaignPDFReport />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/profile" element={<Profile />} />
               
               {/* Catch All Route */}
               <Route path="*" element={<NotFound />} />
