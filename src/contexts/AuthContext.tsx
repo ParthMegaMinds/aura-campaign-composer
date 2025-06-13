@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/components/ui/sonner";
-import type { User } from '@supabase/supabase-js';
+import type { User, Session } from '@supabase/supabase-js';
 
 type AuthUser = {
   id: string;
@@ -13,11 +13,12 @@ type AuthUser = {
 
 type AuthContextType = {
   user: AuthUser | null;
+  session: Session | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  loginWithGoogle: () => Promise<boolean>;
+  loginWithGoogle: () => Promise<void>;
   signup: (email: string, password: string, name: string, role: 'marketing' | 'design' | 'sales') => Promise<boolean>;
-  signupWithGoogle: () => Promise<boolean>;
+  signupWithGoogle: () => Promise<void>;
   logout: () => void;
   updateUserRole: (role: 'marketing' | 'design' | 'sales') => void;
 };
@@ -30,10 +31,27 @@ type AuthProviderProps = {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Get initial session
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.email);
+      setSession(session);
+      
+      if (session?.user) {
+        // Use setTimeout to prevent potential deadlocks
+        setTimeout(() => {
+          loadUserProfile(session.user);
+        }, 0);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    // THEN check for existing session
     const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
@@ -44,16 +62,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     getInitialSession();
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        await loadUserProfile(session.user);
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -63,21 +71,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .from('profiles')
         .select('*')
         .eq('id', authUser.id)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading profile:', error);
         return;
       }
 
-      if (profile) {
-        setUser({
-          id: authUser.id,
-          email: authUser.email || '',
-          name: profile.full_name || authUser.email?.split('@')[0] || '',
-          role: 'marketing' // Default role, can be stored in profile later
-        });
-      }
+      setUser({
+        id: authUser.id,
+        email: authUser.email || '',
+        name: profile?.full_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
+        role: 'marketing' // Default role
+      });
     } catch (error) {
       console.error('Error loading user profile:', error);
     }
@@ -112,11 +118,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const loginWithGoogle = async (): Promise<boolean> => {
+  const loginWithGoogle = async (): Promise<void> => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/`
@@ -125,16 +131,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (error) {
         toast.error(error.message);
-        return false;
+        setLoading(false);
       }
-
-      // Note: OAuth redirects, so we won't reach this point normally
-      return true;
+      // Note: OAuth redirects, so loading state will be reset on redirect
     } catch (error) {
       console.error("Google login error:", error);
       toast.error("Google login failed. Please try again.");
-      return false;
-    } finally {
       setLoading(false);
     }
   };
@@ -166,7 +168,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
 
       if (data.user) {
-        toast.success("Account created successfully! Please check your email to verify your account.");
+        if (data.user.email_confirmed_at) {
+          toast.success("Account created successfully! You are now logged in.");
+        } else {
+          toast.success("Account created successfully! Please check your email to verify your account.");
+        }
         return true;
       }
       
@@ -180,29 +186,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const signupWithGoogle = async (): Promise<boolean> => {
+  const signupWithGoogle = async (): Promise<void> => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/onboarding`
+          redirectTo: `${window.location.origin}/`
         }
       });
 
       if (error) {
         toast.error(error.message);
-        return false;
+        setLoading(false);
       }
-
-      // Note: OAuth redirects, so we won't reach this point normally
-      return true;
+      // Note: OAuth redirects, so loading state will be reset on redirect
     } catch (error) {
       console.error("Google signup error:", error);
       toast.error("Google signup failed. Please try again.");
-      return false;
-    } finally {
       setLoading(false);
     }
   };
@@ -211,6 +213,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       await supabase.auth.signOut();
       setUser(null);
+      setSession(null);
       toast.info("You've been logged out");
     } catch (error) {
       console.error("Logout error:", error);
@@ -218,7 +221,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const updateUserRole = async (role: 'marketing' | 'design' | 'sales') => {
+  const updateUserRole = (role: 'marketing' | 'design' | 'sales') => {
     if (user) {
       const updatedUser = { ...user, role };
       setUser(updatedUser);
@@ -229,6 +232,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   return (
     <AuthContext.Provider value={{ 
       user, 
+      session,
       loading, 
       login, 
       loginWithGoogle, 
